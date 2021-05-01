@@ -1,0 +1,135 @@
+---
+title: "Juror Non-Response Rates in PA (2012-2019)"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(plotly)
+library(DT)
+library(dplyr)
+library(ggplot2)
+library(readxl)
+```
+
+```{r}
+JurorPA <- as.data.frame(read_xlsx("Juror Response Rates.xlsx", sheet = "Juror Data"))
+
+JurorPHL <- as.data.frame(read_xlsx("Juror Response Rates.xlsx", sheet = "PHL Juror"))
+
+values = c("Adams" = "darkgrey", "Allegheny" = "darkgrey", "Beaver" = "darkgrey","Berks" = "darkgrey",
+           "Blair"= "darkgrey", "Bucks"= "darkgrey", "Butler"= "darkgrey", "Cambria"= "darkgrey", "Centre"= "darkgrey",
+           "Chester"= "darkgrey", "Cumberland"= "darkgrey", "Dauphin"= "darkgrey","Delaware" = "darkgrey","Erie"= "darkgrey",
+           "Fayette" = "darkgrey","Franklin"= "darkgrey", "Lackawanna"= "darkgrey", "Lancaster"= "darkgrey", "Lawrence"= "darkgrey",
+           "Lebanon"= "darkgrey", "Lehigh"= "darkgrey", "Luzerne" = "darkgrey","Lycoming" = "darkgrey","Mercer"= "darkgrey",
+           "Monroe"= "darkgrey", "Montgomery"= "darkgrey", "Northampton"= "darkgrey",
+           "Northumberland"= "darkgrey", "Philadelphia"="red", "Schuylkill"= "darkgrey", "Washington"= "darkgrey", "Westmoreland"= "darkgrey",
+           "York"= "darkgrey")
+```
+
+# Graphs
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Juror Non-Response Rates by County and Year
+
+```{r}
+Non_Response_Rate1 <- ggplot(JurorPA, aes(x=County, y=Non_Response_Rate, fill=County)) + 
+  geom_bar(stat = "identity", width=.7) +
+  scale_fill_manual("legend", values = values) +
+  scale_y_continuous(expand = expansion(mult = c(0, .1))) +
+  ylab("Non-Response Rate (%)") +
+  theme(legend.position = "none") +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  facet_wrap("Year") +
+  coord_flip()
+
+
+ggplotly(Non_Response_Rate1)
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Average Juror Non-Response Rate by County (2012-2019)
+
+```{r}
+Juror1 <- JurorPA %>%
+  group_by(County) %>%
+  summarize(Non_Response_Rate = round(mean(Non_Response_Rate),1))
+
+Non_Response_Rate <- ggplot(Juror1, aes(x=County, y=Non_Response_Rate, fill=County)) + 
+  scale_fill_manual("legend", values = values) +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  geom_bar(stat = "identity", width=.7) +
+  scale_y_continuous(expand = expansion(mult = c(0, .1))) +
+  ylab("Non-Response Rate (%)") +
+  theme(legend.position = "none") +
+  coord_flip()
+
+ggplotly(Non_Response_Rate)
+```
+
+### PHL Juror Non-Response Rate vs Rest of PA
+
+```{r}
+PHL_PA <- ggplot(JurorPHL, aes(x=Year, y=Non_Response_Rate, group=County, fill=County)) +
+  geom_bar(position="dodge", stat="identity") +
+  scale_fill_manual("legend", values = c("Philadelphia" = "red", "Rest of PA" = "darkgrey")) +
+  ylab("Non-Response Rate (%)")
+
+ggplotly(PHL_PA)
+```
+
+# Data
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Dataset
+
+```{r}
+datatable(JurorPA,
+          extensions = c('Buttons', 'Scroller'),
+          options = list(
+            dom = 'Bfrtip',
+            buttons = c('copy', 'print', 'csv'),
+            scrollX=TRUE)
+          )
+          
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Info
+
+#### Dataset Information and Sources
+
+
+The purpose of this dashboard is to track Philadelphia's Juror Non-Response Rate in relation to the rest of PA's counties and the Commonwealth at large.
+
+This dataset was compiled from several 'Caseload Statistics Reports' by [The Unified Judicial System of Pennsylvania](http://www.pacourts.us/)
+
+These reports can be found [here](http://www.pacourts.us/news-and-statistics/research-and-statistics/caseload-statistics)
+
+- This dataset contains information from the years 2012-2019
+- 2012 was the first year that the commonwealth tracked non-reponse rates among jurors
+- This dataset breaks down data by PA County
+- There are more data in the dataset than is useful to the scope of this dashboard, however it was left in the dataset as it might be helpful at another point in time.
+
+Future directions:
+
+- Find Juror Non-Response Rates data for Philadelphia broken down by zipcode
+- Add this data to dataset and dashboard
+- Explore other Jury statistics in this dataset and in the 'Caseload Statistics Reports'
+
+
+
